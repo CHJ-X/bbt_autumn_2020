@@ -1,77 +1,94 @@
 #用户信息及用户操作函数
 
 from flask import request, session
-from database import findUser, createUser, userLogin, isnRepeat, inputApplyInfo
-from spring_recruit_2020 import app
+from main import app
+from database import findTel, createUser, student
+import re
 
-@app.route('/bbt/register', methods=['POST'])
-def register():#用户注册
-#获取前端数据 
-    data = request.get_json()
-    username = data['username']
-    password = data['password'] 
-    result = findUser(username)
-    if result:
-        return{
-            'errcode':400,
-            'errmsg': '该用户已被注册'
-        },400
+global null
+null = None
 
-    rowcount = createUser(username, password)
-    if rowcount > 0:
+@app.route('/user', methods=['POST'])
+def register():
+  data = request.get_json()
+  someone = student()
+  someone.name = data['name']
+  someone.sex = data['sex']
+  someone.grade = data['grade']
+  someone.college = data['college']
+  someone.dormitory = data['dormitory']
+  someone.first = data['first']
+  someone.second = data['second']
+  someone.tel = data['tel']
+  someone.adjust = data['adjust']
+  someone.description = data['description']
+
+  ret = re.match(r"^1\d{10}$", someone.tel)
+  isRegister = findTel(someone.tel)
+  if ret:
+    if isRegister:
+      return {
+        "status": 409,
+        "msg": "该手机号已报名",
+        "data": null
+      }
+      
+      
+    else:
+      rowCount = createUser(someone)
+      if rowCount > 0:
         return {
-            'errcode': 0,
-            'errmsg': '注册成功'
-            }, 200    
-        
+        "status": 200,
+        "msg": "报名成功",
+        "data": null 
+        }
+      else:
+        return {
+          "status": 410,
+          "msg": "服务器错误",
+          "data": null
+        }
+      
+  else:
     return {
-        'errcode': 400,
-        'errmsg': '出现错误，请重试'
-    },400
+      "status": 400,
+      "msg": "手机号错误或是其他参数错误",
+      "data": null
+    }
 
-@app.route('/bbt/login', methods=['POST'])
+@app.route('/user?tel={tel}&name={name}', methods=['GET'])
+def require():
+  pass
+
+@app.route('/user', methods=['PUT'])
+def modify():
+  pass
+
+@app.route('/admin/session')
 def login():
-    data = request.get_json()
-    username = data['username']
-    password = data['password'] 
-    result = userLogin(username, password)
+  pass
 
-    if result:
-        session['user_id'] = result[0]
-        return {
-            'errcode':0,
-            'errmsg':'登录成功'
-        },200
-    return {
-        'errcode':401,
-        'errmsg':'用户不存在或密码错误'
-    },401
+@app.route('/admin/user/count', methods=['GET'])
+def requireCount():
+  pass
+
+@app.route('/admin/user/excel', method=['GET'])
+def getExcel():
+  pass
+  
+  
 
 
-@app.route('/bbt/application', methods=['POST'])
-def apply():
-    data = request.get_json()
-    name = data['name']
-    Dormitory = data['Dormitory']
-    result = isnRepeat(name, Dormitory)
 
-    if result:
-        return{
-            'errcode':400,
-            'errmsg':'您已经报名！'
-        },400
 
-    rowcount = inputApplyInfo(data)
 
-    if rowcount > 0:
-        return{
-            'errcode': 0,
-            'errmsg': '报名成功'
-        },200
-    return{
-        'errcode': 400,
-        'errmsg': '出现错误，请重试'
-    },400
+
+
+
+
+
+
+
 
 
 
